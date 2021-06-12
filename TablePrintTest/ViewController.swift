@@ -7,53 +7,47 @@
 
 import Cocoa
 
-class ViewController: NSViewController, NSTableViewDelegate, NSTableViewDataSource {
+class ViewController: NSViewController {
 
     @IBOutlet var tableView: NSTableView!
 
+    /// Used to restore the table view in the NSWindow after printing (see below for details).
     private var tableViewContainerView: NSView?
 
     @IBAction func printTableWithDecoration(_ sender: Any?) {
-        // MARK: Druckbereich ermitteln, um die Größe der NSViews auf Papier zu bestimmen
-        // Verfügbare Maße zum Drucken zunächst auf den druckbaren Bereich
-        // einer Seite beschränken -- wir erlauben später, vertikal zu wachsen.
+        // MARK: Figure out the printable region
+        // Without a proper initial frame, the content apparently won't lay out on the page to fill it. So we take the page info and compute the available content size.
+        // Calculation taken from: <https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Printing/osxp_pagination/osxp_pagination.html>
         let printInfo = NSPrintInfo.shared
         let paperSize = NSPrintInfo.shared.paperSize // Maße einer ganzen Seite (A4) bis zum Rand, also mehr als man bedrucken kann
         let pageContentSize = NSSize(width: paperSize.width - printInfo.leftMargin - printInfo.rightMargin,
                                      height: paperSize.height - printInfo.topMargin - printInfo.bottomMargin)
 
-        // MARK: Einleitungstext vorbereiten
+        // MARK: Introductory text
+        // This is going to be printed on top the page, but not in the header (that would repeat the text on every page).
         let introductionText = "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
         let introductionLabel = NSTextField.newWrappingLabel(title: introductionText, controlSize: .regular)
 
-        // MARK: Anordnen der Elemente auf der Seite
-        // Einleitungstext und Tabelle werden vertikal auf der Seite angeordnet, in einem 'stack' der die Seite füllt
+        // MARK: Lay out introduction and table on the page(s)
         let initialFrameForPrinting = NSRect(origin: .zero, size: pageContentSize)
         let stackView = NSStackView(frame: initialFrameForPrinting)
         stackView.orientation = .vertical
         stackView.alignment = .left
         stackView.spacing = 20.0
-        stackView.autoresizingMask = [.height] // Container darf größer werden, wenn z.B. die Tabelle zu lang wird
+        stackView.autoresizingMask = [.height] // Container may get higher to fit more pages
 
-        // Wir packen die Tabelle auf die Druckseite. Dabei wird sie aber aus dem NSWindow entfernt,
-        // weil sie nur in einer NSView Hierarchie gleichzeitig sein kann. Wir speichern den
-        // Container der Tabelle in der NSScrollView zwischen, um die Tabelle später wieder dort
-        // einfügen zu können. (Siehe ganz unten.)
+        // FIXME: Quick fix: adding `tableView` onto to the temp page layout will remove it from the NSWindow's view hierarchy. We probably want to solve this differently
+        // See the delegate callback below where the view hierarchy is restored. This feels ultra hacky.
+        // TODO: Try to programmatically create NSTableView from scratch. I couldn't get anything displayed.
         self.tableViewContainerView = self.tableView.enclosingScrollView?.contentView
 
-        // Die Komponenten in den Stack einfügen:
         stackView.addArrangedSubview(introductionLabel)
-        stackView.addArrangedSubview(self.tableView) // Hiermit wird die Tabelle aus dem Fenster aufs Papier verschoben
+        stackView.addArrangedSubview(self.tableView) // After here, the tableView is not part of the NSWindow anymore
 
-        // Forcieren des Layouts
-        stackView.layoutSubtreeIfNeeded()
-
-        // MARK: Drucken der View
-        // Drucken oben-links auf der Seite beginnen, egal wie klein der Inhalt ist
+        // Print 'naturally', starting in top-left (for LTR languages at least?) instead of centering the content like a picture.
         printInfo.isHorizontallyCentered = false
         printInfo.isVerticallyCentered = false
-
-        printInfo.horizontalPagination = .clip  // .fit schrumpft alles, bis es passt
+        printInfo.horizontalPagination = .clip  // Using `.fit` would shrink the content.
         printInfo.verticalPagination = .automatic
 
         let printOperation = NSPrintOperation(view: stackView)
@@ -62,27 +56,24 @@ class ViewController: NSViewController, NSTableViewDelegate, NSTableViewDataSour
                                 didRun: #selector(printOperationDidRun(_:success:contextInfo:)),
                                 contextInfo: nil)
 
-        // Ab hier ist der Druck-Dialog sichtbar. Die Tabelle verschwindet zwischenzeitlich aus dem Fenster.
-        // Das kann man bestimmt umgehen, aber ich weiß noch nicht, wie das am Besten geht.
+        // `runModal` doesn't block the main thread, so this line is reached immediately, and `tableView` is from this point on not visible in the window anymore. The window is effectively blank.
     }
 
     @objc func printOperationDidRun(_ printOperation: NSPrintOperation, success: Bool, contextInfo: UnsafeMutableRawPointer?) {
-        // (Ab hier ist der Dialog wieder weg)
+        // From here on out, the print window is gone.
 
-        // Wir fügen die Tabelle wieder ins Fenster ein. Vergisst man das, bleibt das Fenster leer.
+        // Restore the NSWindow view hierarchy, adding `tableView` back where it came from.
         tableViewContainerView?.addSubview(self.tableView)
         tableViewContainerView = nil
     }
+}
 
-    /*
-     Wir simulieren hier 1000 Zeilen in der Tabelle, um den Druck über
-     mehrere Seiten zu betrachten. Statt wirklich 1000 Objekte anzulegen,
-     werden die on-the-fly erstellt.
-     */
+// MARK: - Populate table view on the fly
 
+extension ViewController: NSTableViewDelegate, NSTableViewDataSource {
     override func viewDidLoad() {
         super.viewDidLoad()
-        tableView.sizeLastColumnToFit() // automatisch volle Breite einnehmen
+        tableView.sizeLastColumnToFit()
     }
 
     func numberOfRows(in tableView: NSTableView) -> Int {
@@ -90,15 +81,13 @@ class ViewController: NSViewController, NSTableViewDelegate, NSTableViewDataSour
     }
 
     func tableView(_ tableView: NSTableView, objectValueFor tableColumn: NSTableColumn?, row: Int) -> Any? {
-        // Die Zeilennummer wiederholen wir ein paar mal, um auch
-        // breiten Inhalt zu bekommen, wenn wir die Spalte breit machen
+        // Create some dummy content based on the row number
         let string = (0...40).map { _ in "\(row)" }.joined(separator: " ")
         return string
     }
 
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
-        // Im Storyboard ist das NSTableViewCell textField mit "bindings" an den objectValue gekoppelt.
-        // So kriegt das Label automatisch den Inhalt zugewiesen.
+        // The Storyboard uses Cocoa Bindings from NSTableViewCell.textField.value to NSTableViewCell.objectValue, just to save some code here for the dummy data.
         return tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier("cell"), owner: self)
     }
 }

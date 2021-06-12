@@ -23,6 +23,7 @@
 		5087B8A12673D9E7001F055D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		5087B8A22673D9E7001F055D /* TablePrintTest.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TablePrintTest.entitlements; sourceTree = "<group>"; };
 		5087B8A82674A1CB001F055D /* NSTextField+labels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSTextField+labels.swift"; sourceTree = "<group>"; };
+		5087B8AA2674A7C7001F055D /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -39,6 +40,7 @@
 		5087B88C2673D9E4001F055D = {
 			isa = PBXGroup;
 			children = (
+				5087B8AA2674A7C7001F055D /* README.md */,
 				5087B8972673D9E4001F055D /* TablePrintTest */,
 				5087B8962673D9E4001F055D /* Products */,
 			);
