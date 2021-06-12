@@ -23,17 +23,8 @@ class ViewController: NSViewController, NSTableViewDelegate, NSTableViewDataSour
                                      height: paperSize.height - printInfo.topMargin - printInfo.bottomMargin)
 
         // MARK: Einleitungstext vorbereiten
-        let introductionLabel = NSTextField(string: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.")
-        introductionLabel.isEditable = false
-        introductionLabel.usesSingleLineMode = false
-        introductionLabel.lineBreakMode = .byWordWrapping
-        introductionLabel.cell?.wraps = true
-        introductionLabel.cell?.isScrollable = false
-        introductionLabel.textColor = .labelColor
-        introductionLabel.drawsBackground = false // Schwarz auf weiß drucken, ohne farbigen Hintergrund (v.a. in dark mode wollen wir den ignorieren)
-        introductionLabel.isBezeled = false // Rahmen von Textfeldern nicht zeichnen, nur den Text
-        introductionLabel.alignment = .natural
-
+        let introductionText = "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+        let introductionLabel = NSTextField.newWrappingLabel(title: introductionText, controlSize: .regular)
 
         // MARK: Anordnen der Elemente auf der Seite
         // Einleitungstext und Tabelle werden vertikal auf der Seite angeordnet, in einem 'stack' der die Seite füllt
