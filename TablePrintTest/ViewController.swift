@@ -22,7 +22,7 @@ class ViewController: NSViewController {
         // MARK: Introductory text
         // This is going to be printed on top the page, but not in the header (that would repeat the text on every page).
         let introductionText = "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
-        let introductionLabel = NSTextField.newWrappingLabel(title: introductionText, controlSize: .regular)
+        let introductionLabel = NSTextField.wrappingLabel(title: introductionText, controlSize: .regular)
 
         // MARK: Plain table for printing
         let tableViewForPrint = NSTableView(frame: .zero)
@@ -103,7 +103,7 @@ class TableCellView: NSTableCellView {
         super.init(frame: frameRect)
         self.identifier = .cell
 
-        let textField = NSTextField.newLabel()
+        let textField = NSTextField.label()
         textField.autoresizingMask = [.width, .height]
         self.addSubview(textField)
         self.textField = textField

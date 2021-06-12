@@ -13,7 +13,7 @@ extension NSTextField {
     }
 
     /// Return an `NSTextField` configured exactly like one created by dragging a “Label” into a storyboard.
-    class func newLabel(
+    class func label(
         title: String = "",
         controlSize: NSControl.ControlSize = .regular) -> NSTextField {
 
@@ -35,11 +35,11 @@ extension NSTextField {
     }
 
     /// Return an `NSTextField` configured exactly like one created by dragging a “Wrapping Label” into a storyboard.
-    class func newWrappingLabel(
+    class func wrappingLabel(
         title: String = "",
         controlSize: NSControl.ControlSize = .regular) -> NSTextField {
 
-        let label = newLabel(title: title, controlSize: controlSize)
+        let label = label(title: title, controlSize: controlSize)
         label.lineBreakMode = .byWordWrapping
         label.cell?.isScrollable = false
         label.cell?.wraps = true
