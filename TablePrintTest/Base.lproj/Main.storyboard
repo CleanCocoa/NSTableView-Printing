@@ -112,7 +112,7 @@
                                         </menuItem>
                                         <menuItem title="Print…" keyEquivalent="p" id="aTl-1u-JFS">
                                             <connections>
-                                                <action selector="print:" target="Ady-hI-5gd" id="qaZ-4w-aoO"/>
+                                                <action selector="printTableWithDecoration:" target="Ady-hI-5gd" id="FJ8-k1-BF3"/>
                                             </connections>
                                         </menuItem>
                                     </items>
@@ -783,6 +783,9 @@
                             <constraint firstAttribute="bottom" secondItem="r2n-Jb-nvO" secondAttribute="bottom" id="L3f-SR-Ltt"/>
                         </constraints>
                     </view>
+                    <connections>
+                        <outlet property="tableView" destination="GvG-LI-jPo" id="Kkk-bf-WeD"/>
+                    </connections>
                 </viewController>
                 <customObject id="rPt-NT-nkU" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
