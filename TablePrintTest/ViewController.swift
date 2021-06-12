@@ -11,6 +11,8 @@ class ViewController: NSViewController, NSTableViewDelegate, NSTableViewDataSour
 
     @IBOutlet var tableView: NSTableView!
 
+    private var tableViewContainerView: NSView?
+
     @IBAction func printTableWithDecoration(_ sender: Any?) {
         // MARK: Druckbereich ermitteln, um die Größe der NSViews auf Papier zu bestimmen
         // Verfügbare Maße zum Drucken zunächst auf den druckbaren Bereich
@@ -26,10 +28,17 @@ class ViewController: NSViewController, NSTableViewDelegate, NSTableViewDataSour
         let stackView = NSStackView(frame: initialFrameForPrinting)
         stackView.orientation = .vertical
         stackView.alignment = .left
+        stackView.distribution = .fill
         stackView.autoresizingMask = [.height] // Container darf größer werden, wenn z.B. die Tabelle zu lang wird
 
+        // Wir packen die Tabelle auf die Druckseite. Dabei wird sie aber aus dem NSWindow entfernt,
+        // weil sie nur in einer NSView Hierarchie gleichzeitig sein kann. Wir speichern den
+        // Container der Tabelle in der NSScrollView zwischen, um die Tabelle später wieder dort
+        // einfügen zu können. (Siehe ganz unten.)
+        self.tableViewContainerView = self.tableView.enclosingScrollView?.contentView
+
         // Die Komponenten in den Stack einfügen:
-        stackView.addArrangedSubview(self.tableView)
+        stackView.addArrangedSubview(self.tableView) // Hiermit wird die Tabelle aus dem Fenster aufs Papier verschoben
 
         // Forcieren des Layouts
         stackView.layoutSubtreeIfNeeded()
@@ -43,9 +52,21 @@ class ViewController: NSViewController, NSTableViewDelegate, NSTableViewDataSour
         printInfo.verticalPagination = .automatic
 
         let printOperation = NSPrintOperation(view: stackView)
-        printOperation.runModal(for: self.view.window!, delegate: nil, didRun: nil, contextInfo: nil)
+        printOperation.runModal(for: self.view.window!,
+                                delegate: self,
+                                didRun: #selector(printOperationDidRun(_:success:contextInfo:)),
+                                contextInfo: nil)
 
-        // Am Ende dieser Funktion werden alle lokalen Variablen freigegeben und die `stackView` und `printOperation` automatisch gelöscht.
+        // Ab hier ist der Druck-Dialog sichtbar. Die Tabelle verschwindet zwischenzeitlich aus dem Fenster.
+        // Das kann man bestimmt umgehen, aber ich weiß noch nicht, wie das am Besten geht.
+    }
+
+    @objc func printOperationDidRun(_ printOperation: NSPrintOperation, success: Bool, contextInfo: UnsafeMutableRawPointer?) {
+        // (Ab hier ist der Dialog wieder weg)
+
+        // Wir fügen die Tabelle wieder ins Fenster ein. Vergisst man das, bleibt das Fenster leer.
+        tableViewContainerView?.addSubview(self.tableView)
+        tableViewContainerView = nil
     }
 
     /*
@@ -55,21 +76,19 @@ class ViewController: NSViewController, NSTableViewDelegate, NSTableViewDataSour
      */
 
     func numberOfRows(in tableView: NSTableView) -> Int {
-        return 200
+        return 100
     }
 
     func tableView(_ tableView: NSTableView, objectValueFor tableColumn: NSTableColumn?, row: Int) -> Any? {
-        return row
+        // Die Zeilennummer wiederholen wir ein paar mal, um auch
+        // breiten Inhalt zu bekommen, wenn wir die Spalte breit machen
+        let string = (0...40).map { _ in "\(row)" }.joined(separator: " ")
+        return string
     }
 
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
-        guard let cellView = tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier("cell"), owner: nil) as? NSTableCellView else { return nil }
-        let value = self.tableView(tableView, objectValueFor: tableColumn, row: row) ?? 0
-        // Die Zeilennummer wiederholen wir ein paar mal, um auch
-        // breiten Inhalt zu bekommen, wenn wir die Spalte breit machen
-        let string = (0...40).map { _ in "\(value)" }.joined(separator: " ")
-        cellView.textField?.stringValue = string
-        return cellView
+        // Im Storyboard ist das NSTableViewCell textField mit "bindings" an den objectValue gekoppelt.
+        // So kriegt das Label automatisch den Inhalt zugewiesen.
+        return tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier("cell"), owner: self)
     }
 }
-
