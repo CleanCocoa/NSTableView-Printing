@@ -4,7 +4,12 @@ This is a demo project so you can check out how printing a table could work.
 
 The goal here is to show tabular data on screen, and add text for print-outs.
 
-![Screenshot of the print dialog](assets/screenshot.png)
+<table>
+<tr>
+<td><a href="assets/screenshot.png"><img src="assets/screenshot.png" alt="Screenshot of the print dialog"></a><br><small>Print dialog</small></td>
+<td><a href="assets/printout.png"><img src="assets/printout.png" alt="Screenshot Preview.app showing the print result"></a><br><small>PDF result</small></td>
+</tr>
+</table>
 
 ## Discussion
 
