@@ -32,9 +32,12 @@ class ViewController: NSViewController {
         tableViewForPrint.allowsColumnSelection = false
         tableViewForPrint.allowsColumnResizing = true
         tableViewForPrint.addTableColumn(soleColumn)
-        tableViewForPrint.style = .plain // Avoid Big Sur's horizontal padding
         tableViewForPrint.selectionHighlightStyle = .none
         tableViewForPrint.allowsEmptySelection = true
+        if #available(macOS 11.0, *) {
+            // Avoid Big Sur's default horizontal padding
+            tableViewForPrint.style = .plain
+        }
 
         tableViewForPrint.dataSource = self
         tableViewForPrint.delegate = self
