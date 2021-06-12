@@ -15,7 +15,7 @@ class ViewController: NSViewController {
         // Without a proper initial frame, the content apparently won't lay out on the page to fill it. So we take the page info and compute the available content size.
         // Calculation taken from: <https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Printing/osxp_pagination/osxp_pagination.html>
         let printInfo = NSPrintInfo.shared
-        let paperSize = NSPrintInfo.shared.paperSize // Maße einer ganzen Seite (A4) bis zum Rand, also mehr als man bedrucken kann
+        let paperSize = NSPrintInfo.shared.paperSize
         let pageContentSize = NSSize(width: paperSize.width - printInfo.leftMargin - printInfo.rightMargin,
                                      height: paperSize.height - printInfo.topMargin - printInfo.bottomMargin)
 
@@ -60,7 +60,9 @@ class ViewController: NSViewController {
         // Print 'naturally', starting in top-left (for LTR languages at least?) instead of centering the content like a picture.
         printInfo.isHorizontallyCentered = false
         printInfo.isVerticallyCentered = false
-        printInfo.horizontalPagination = .clip  // Using `.fit` would shrink the content.
+
+        // Using `.fit` would shrink the content if it was a single-line label, but actually behaves the same with our more complex layout.
+        printInfo.horizontalPagination = .clip
         printInfo.verticalPagination = .automatic
 
         let printOperation = NSPrintOperation(view: stackView)
@@ -68,8 +70,6 @@ class ViewController: NSViewController {
                                 delegate: nil,
                                 didRun: nil,
                                 contextInfo: nil)
-
-        // `runModal` doesn't block the main thread, so this line is reached immediately, and `tableView` is from this point on not visible in the window anymore. The window is effectively blank.
     }
 }
 

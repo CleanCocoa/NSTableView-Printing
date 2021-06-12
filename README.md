@@ -8,7 +8,7 @@ The goal here is to show tabular data on screen, and add text for print-outs.
 
 ## Discussion
 
-`NSView`-based printing is a bit odd since it prints whatever `NSView.draw(_:)` produces. We can customzie that by overriding the `draw` method. But for a table view? Hm.
+`NSView`-based printing is a bit odd since it prints whatever `NSView.draw(_:)` produces. We can customzie that by overriding the `draw` method. But for a table view? Embedding a stock standard table view in a custom view hierarchy sounds more promising.
 
 To add a multi-line label on page, we cannot use the stock view-based printing options since the label is not part of the view hierarchy. We need to set up our own view hierarchy with all the to-be-printed views.
 
@@ -20,10 +20,6 @@ Actually recommended by other devs: use `WKWebView` and HTML. WebKit does a grea
 
 See my accompanying blog post for details and a recap:  
 <https://christiantietze.de/posts/2021/06/printing-nstableview-with-label/>
-
-## Known Issues
-
-- You cannot just add the on-screen `NSTableView` to the view hierarchy for printing -- that removes the table view from the window. That's expected, but also a bummer. I'm now using a quick hack to restore the table view's vier hierarchy again after printing.
 
 ## License
 
