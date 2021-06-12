@@ -8,11 +8,7 @@
 import Cocoa
 
 class ViewController: NSViewController {
-
     @IBOutlet var tableView: NSTableView!
-
-    /// Used to restore the table view in the NSWindow after printing (see below for details).
-    private var tableViewContainerView: NSView?
 
     @IBAction func printTableWithDecoration(_ sender: Any?) {
         // MARK: Figure out the printable region
@@ -28,15 +24,7 @@ class ViewController: NSViewController {
         let introductionText = "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
         let introductionLabel = NSTextField.newWrappingLabel(title: introductionText, controlSize: .regular)
 
-        // MARK: Lay out introduction and table on the page(s)
-        let initialFrameForPrinting = NSRect(origin: .zero, size: pageContentSize)
-        let stackView = NSStackView(frame: initialFrameForPrinting)
-        stackView.orientation = .vertical
-        stackView.alignment = .left
-        stackView.spacing = 20.0
-        stackView.distribution = .fill
-        stackView.autoresizingMask = [.height] // Container may get higher to fit more pages
-
+        // MARK: Plain table for printing
         let tableViewForPrint = NSTableView(frame: .zero)
         let soleColumn = NSTableColumn()
         soleColumn.resizingMask = .autoresizingMask
@@ -47,15 +35,25 @@ class ViewController: NSViewController {
         tableViewForPrint.style = .plain // Avoid Big Sur's horizontal padding
         tableViewForPrint.selectionHighlightStyle = .none
         tableViewForPrint.allowsEmptySelection = true
-        
+
         tableViewForPrint.dataSource = self
         tableViewForPrint.delegate = self
         tableViewForPrint.reloadData()
 
+        // MARK: Lay out introduction and table on the page(s)
+        let initialFrameForPrinting = NSRect(origin: .zero, size: pageContentSize)
+        let stackView = NSStackView(frame: initialFrameForPrinting)
+        stackView.orientation = .vertical
+        stackView.alignment = .left
+        stackView.spacing = 20.0
+        stackView.distribution = .fill
+        stackView.autoresizingMask = [.height] // Container may get higher to fit more pages
+
         stackView.addArrangedSubview(introductionLabel)
         stackView.addArrangedSubview(tableViewForPrint)
-        tableViewForPrint.sizeLastColumnToFit()
+        tableViewForPrint.sizeLastColumnToFit() // won't work earlier than when the table is embedded in a view hierarchy
 
+        // MARK: Configure the print operation
         // Print 'naturally', starting in top-left (for LTR languages at least?) instead of centering the content like a picture.
         printInfo.isHorizontallyCentered = false
         printInfo.isVerticallyCentered = false
