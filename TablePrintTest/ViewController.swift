@@ -22,13 +22,26 @@ class ViewController: NSViewController, NSTableViewDelegate, NSTableViewDataSour
         let pageContentSize = NSSize(width: paperSize.width - printInfo.leftMargin - printInfo.rightMargin,
                                      height: paperSize.height - printInfo.topMargin - printInfo.bottomMargin)
 
+        // MARK: Einleitungstext vorbereiten
+        let introductionLabel = NSTextField(string: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.")
+        introductionLabel.isEditable = false
+        introductionLabel.usesSingleLineMode = false
+        introductionLabel.lineBreakMode = .byWordWrapping
+        introductionLabel.cell?.wraps = true
+        introductionLabel.cell?.isScrollable = false
+        introductionLabel.textColor = .labelColor
+        introductionLabel.drawsBackground = false // Schwarz auf weiß drucken, ohne farbigen Hintergrund (v.a. in dark mode wollen wir den ignorieren)
+        introductionLabel.isBezeled = false // Rahmen von Textfeldern nicht zeichnen, nur den Text
+        introductionLabel.alignment = .natural
+
+
         // MARK: Anordnen der Elemente auf der Seite
         // Einleitungstext und Tabelle werden vertikal auf der Seite angeordnet, in einem 'stack' der die Seite füllt
         let initialFrameForPrinting = NSRect(origin: .zero, size: pageContentSize)
         let stackView = NSStackView(frame: initialFrameForPrinting)
         stackView.orientation = .vertical
         stackView.alignment = .left
-        stackView.distribution = .fill
+        stackView.spacing = 20.0
         stackView.autoresizingMask = [.height] // Container darf größer werden, wenn z.B. die Tabelle zu lang wird
 
         // Wir packen die Tabelle auf die Druckseite. Dabei wird sie aber aus dem NSWindow entfernt,
@@ -38,6 +51,7 @@ class ViewController: NSViewController, NSTableViewDelegate, NSTableViewDataSour
         self.tableViewContainerView = self.tableView.enclosingScrollView?.contentView
 
         // Die Komponenten in den Stack einfügen:
+        stackView.addArrangedSubview(introductionLabel)
         stackView.addArrangedSubview(self.tableView) // Hiermit wird die Tabelle aus dem Fenster aufs Papier verschoben
 
         // Forcieren des Layouts
@@ -74,6 +88,11 @@ class ViewController: NSViewController, NSTableViewDelegate, NSTableViewDataSour
      mehrere Seiten zu betrachten. Statt wirklich 1000 Objekte anzulegen,
      werden die on-the-fly erstellt.
      */
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        tableView.sizeLastColumnToFit() // automatisch volle Breite einnehmen
+    }
 
     func numberOfRows(in tableView: NSTableView) -> Int {
         return 100
