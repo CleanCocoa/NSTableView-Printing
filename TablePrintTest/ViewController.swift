@@ -16,18 +16,20 @@ class ViewController: NSViewController, NSTableViewDelegate, NSTableViewDataSour
      */
 
     func numberOfRows(in tableView: NSTableView) -> Int {
-        return 1000
+        return 200
     }
 
     func tableView(_ tableView: NSTableView, objectValueFor tableColumn: NSTableColumn?, row: Int) -> Any? {
         return row
     }
 
-
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         guard let cellView = tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier("cell"), owner: nil) as? NSTableCellView else { return nil }
         let value = self.tableView(tableView, objectValueFor: tableColumn, row: row) ?? 0
-        cellView.textField?.stringValue = "\(value)"
+        // Die Zeilennummer wiederholen wir ein paar mal, um auch
+        // breiten Inhalt zu bekommen, wenn wir die Spalte breit machen
+        let string = (0...40).map { _ in "\(value)" }.joined(separator: " ")
+        cellView.textField?.stringValue = string
         return cellView
     }
 }
