@@ -34,15 +34,27 @@ class ViewController: NSViewController {
         stackView.orientation = .vertical
         stackView.alignment = .left
         stackView.spacing = 20.0
+        stackView.distribution = .fill
         stackView.autoresizingMask = [.height] // Container may get higher to fit more pages
 
-        // FIXME: Quick fix: adding `tableView` onto to the temp page layout will remove it from the NSWindow's view hierarchy. We probably want to solve this differently
-        // See the delegate callback below where the view hierarchy is restored. This feels ultra hacky.
-        // TODO: Try to programmatically create NSTableView from scratch. I couldn't get anything displayed.
-        self.tableViewContainerView = self.tableView.enclosingScrollView?.contentView
+        let tableViewForPrint = NSTableView(frame: .zero)
+        let soleColumn = NSTableColumn()
+        soleColumn.resizingMask = .autoresizingMask
+        tableViewForPrint.columnAutoresizingStyle = .lastColumnOnlyAutoresizingStyle
+        tableViewForPrint.allowsColumnSelection = false
+        tableViewForPrint.allowsColumnResizing = true
+        tableViewForPrint.addTableColumn(soleColumn)
+        tableViewForPrint.style = .plain // Avoid Big Sur's horizontal padding
+        tableViewForPrint.selectionHighlightStyle = .none
+        tableViewForPrint.allowsEmptySelection = true
+        
+        tableViewForPrint.dataSource = self
+        tableViewForPrint.delegate = self
+        tableViewForPrint.reloadData()
 
         stackView.addArrangedSubview(introductionLabel)
-        stackView.addArrangedSubview(self.tableView) // After here, the tableView is not part of the NSWindow anymore
+        stackView.addArrangedSubview(tableViewForPrint)
+        tableViewForPrint.sizeLastColumnToFit()
 
         // Print 'naturally', starting in top-left (for LTR languages at least?) instead of centering the content like a picture.
         printInfo.isHorizontallyCentered = false
@@ -52,19 +64,11 @@ class ViewController: NSViewController {
 
         let printOperation = NSPrintOperation(view: stackView)
         printOperation.runModal(for: self.view.window!,
-                                delegate: self,
-                                didRun: #selector(printOperationDidRun(_:success:contextInfo:)),
+                                delegate: nil,
+                                didRun: nil,
                                 contextInfo: nil)
 
         // `runModal` doesn't block the main thread, so this line is reached immediately, and `tableView` is from this point on not visible in the window anymore. The window is effectively blank.
-    }
-
-    @objc func printOperationDidRun(_ printOperation: NSPrintOperation, success: Bool, contextInfo: UnsafeMutableRawPointer?) {
-        // From here on out, the print window is gone.
-
-        // Restore the NSWindow view hierarchy, adding `tableView` back where it came from.
-        tableViewContainerView?.addSubview(self.tableView)
-        tableViewContainerView = nil
     }
 }
 
@@ -87,7 +91,29 @@ extension ViewController: NSTableViewDelegate, NSTableViewDataSource {
     }
 
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
-        // The Storyboard uses Cocoa Bindings from NSTableViewCell.textField.value to NSTableViewCell.objectValue, just to save some code here for the dummy data.
-        return tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier("cell"), owner: self)
+        // We're not using the Storyboard's cell but a custom subclass so that we can share the code on screen and on paper.
+        return tableView.makeView(withIdentifier: .cell, owner: self) ?? TableCellView()
+    }
+}
+
+extension NSUserInterfaceItemIdentifier {
+    static let cell: NSUserInterfaceItemIdentifier = NSUserInterfaceItemIdentifier("cell")
+}
+
+class TableCellView: NSTableCellView {
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        self.identifier = .cell
+
+        let textField = NSTextField.newLabel()
+        textField.autoresizingMask = [.width, .height]
+        self.addSubview(textField)
+        self.textField = textField
+
+        textField.bind(NSBindingName.value, to: self, withKeyPath: "objectValue", options: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
 }
